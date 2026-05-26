@@ -8,6 +8,15 @@
 
 **Input**: User description: "我现在要制作一个音乐播客的播单界面，请你参考原型图以及下面描述的要求构建此界面的前端：1. 节目列表展示：使用 SwiftUI 实现一个列表，展示至少10条节目数据，每条节目包含：封面图、标题、主播名称、时长、音频地址，列表需要支持上下滑动浏览 2. 数据来源： 本项目中的data文件夹中，Image为封面图，Audio为音频文件，Info文件中保存了所有播客的信息，项目所有文件均保存在本地文件夹，对应URL应当为本地文件，不需要用https协议 3. 播放状态切换：点击任意节目条目时，该条目显示“正在播放”的视觉标识（对应条目背景高亮），同时，之前正在播放的条目恢复普通状态，即同一时间只有一条节目处于“播放中状态” 4. UI 适配：适配 iPhone 不同屏幕尺寸，支持深色模式适配 5. 实现一个简单的音频播放功能,点击节目后播放对应的音频文件 6. 添加一个“播放中”悬浮条，显示当前正在播放的节目标题(类似于底部悬浮播放悬窗) 7. 对列表添加下拉刷新功能（模拟刷新） 8. 底部Tab选项点击后切换到对应界面，同时播放播客不停止播放，保留播放悬浮窗。"
 
+## Clarifications
+
+### Session 2026-05-26
+
+- Q: 底部 Tab 的范围与命名是什么？ → A: 3 个 Tab：节目、发现、我的；发现和我的只做可切换的占位页面
+- Q: 再次点击当前正在播放的节目时应该发生什么？ → A: 暂停当前播放
+- Q: 底部“播放中”悬浮条除了标题外，是否还需要交互按钮？ → A: 提供播放/暂停按钮
+- Q: 当当前节目被暂停时，悬浮条是否还应该继续显示？ → A: 继续显示，直到用户切换到别的节目或显式清空
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Browse and Play Local Episodes (Priority: P1)
@@ -23,6 +32,7 @@ As a listener, I want to browse a scrollable playlist of local podcast episodes 
 1. **Given** the app has at least 10 valid local episode records, **When** the listener opens the podcast tab, **Then** the app shows a vertically scrollable list of episode cards with cover image, title, host name, duration, and playback affordance for each item.
 2. **Given** no episode is currently marked active, **When** the listener taps an episode card, **Then** that episode begins playing and the tapped card shows the active playback visual state.
 3. **Given** one episode is already active, **When** the listener taps a different episode card, **Then** the newly tapped episode becomes the only active item and the previous item returns to its default state.
+4. **Given** one episode is already active and currently playing, **When** the listener taps that same episode card again, **Then** playback pauses for that episode without activating any other item.
 
 ---
 
@@ -37,7 +47,8 @@ As a listener, I want playback to continue while I switch between bottom tabs, s
 **Acceptance Scenarios**:
 
 1. **Given** an episode is currently playing, **When** the listener switches to another bottom tab, **Then** playback continues without restarting or stopping and the floating playback bar remains visible.
-2. **Given** an episode is currently playing on a non-list tab, **When** the listener returns to the podcast list tab, **Then** the same episode remains marked as active and the floating playback bar still shows that episode.
+2. **Given** an episode is currently playing on the `发现` or `我的` placeholder tab, **When** the listener returns to the `节目` tab, **Then** the same episode remains marked as active and the floating playback bar still shows that episode.
+3. **Given** the current episode is paused, **When** the listener stays on any tab, **Then** the floating playback bar remains visible and allows playback to resume for that same episode.
 
 ---
 
@@ -59,7 +70,7 @@ As a listener, I want the playlist screen to refresh on pull and remain readable
 - If an episode record points to a local cover image or audio file that cannot be found, the episode remains visible with a safe fallback visual state and the app does not crash.
 - If the listener pulls to refresh while an episode is already playing, playback continues and the active episode remains consistent after refresh completes.
 - If the local metadata source contains duplicate episode identifiers or fewer than 10 valid episodes, the app rejects invalid records and surfaces only valid unique episodes while keeping the interface usable.
-- If the listener taps the episode that is already active, the app preserves a single active item and does not activate a second card.
+- If the listener taps the episode that is already active, the app pauses that episode instead of activating a second card or restarting playback.
 - If a tab with no episode list is selected while nothing is currently playing, the floating playback bar stays hidden.
 
 ## Requirements *(mandatory)*
@@ -74,27 +85,29 @@ As a listener, I want the playlist screen to refresh on pull and remain readable
 - **FR-006**: The system MUST ensure that only one episode can appear in the active playing state at any time.
 - **FR-007**: When a new episode starts playing, the previously active episode item MUST return to its default visual state.
 - **FR-008**: The active episode item MUST display a distinct visual treatment indicating that it is currently playing.
-- **FR-009**: The system MUST provide a floating playback bar above the bottom navigation area whenever an episode is currently active.
-- **FR-010**: The floating playback bar MUST display the current episode title and remain visible across bottom-tab navigation until playback ends or is cleared.
-- **FR-011**: Playback MUST continue uninterrupted when the listener switches between bottom tabs.
-- **FR-012**: The bottom navigation MUST allow switching among the podcast list and other app sections without resetting the current playback session.
-- **FR-013**: The playlist screen MUST support pull-to-refresh behavior that simulates reloading local content and returns the screen to a stable refreshed state.
-- **FR-014**: A refresh action MUST NOT create a second active episode or interrupt the currently playing episode unless the current media record becomes invalid.
-- **FR-015**: The interface MUST remain readable and visually consistent in both light and dark appearance modes.
-- **FR-016**: The interface MUST adapt to common iPhone screen sizes without clipping episode information, primary controls, bottom navigation, or the floating playback bar.
-- **FR-017**: The system MUST handle missing or invalid local media references gracefully by avoiding crashes and preserving the rest of the playlist experience.
-- **FR-018**: The feature MUST define explicit Model, View, ViewModel, and Controller responsibilities for episode loading, playback state, navigation persistence, and refresh behavior.
-- **FR-019**: The feature MUST be implementable with SwiftUI on iOS 17+ only.
-- **FR-020**: The feature MUST remain within frontend-only scope and MUST NOT require backend implementation to complete the requested work.
-- **FR-021**: All variable names MUST use camelCase and end with a type suffix.
-- **FR-022**: Every function introduced by the feature MUST include a documentation block with function name, accepted parameters, purpose, and return value.
+- **FR-009**: Tapping the episode item that is already playing MUST pause playback for that same episode rather than switching to another item.
+- **FR-010**: The system MUST provide a floating playback bar above the bottom navigation area whenever an episode is currently active.
+- **FR-011**: The floating playback bar MUST display the current episode title, expose a play/pause control, and remain visible across bottom-tab navigation while the current episode remains active, including paused state, until a different episode is selected or the session is explicitly cleared.
+- **FR-012**: Playback MUST continue uninterrupted when the listener switches between bottom tabs.
+- **FR-013**: The bottom navigation MUST allow switching among exactly 3 tabs named `节目`, `发现`, and `我的` without resetting the current playback session.
+- **FR-014**: The `发现` and `我的` tabs MUST be implemented as navigable placeholder pages for this feature release.
+- **FR-015**: The playlist screen MUST support pull-to-refresh behavior that simulates reloading local content and returns the screen to a stable refreshed state.
+- **FR-016**: A refresh action MUST NOT create a second active episode or interrupt the currently playing episode unless the current media record becomes invalid.
+- **FR-017**: The interface MUST remain readable and visually consistent in both light and dark appearance modes.
+- **FR-018**: The interface MUST adapt to common iPhone screen sizes without clipping episode information, primary controls, bottom navigation, or the floating playback bar.
+- **FR-019**: The system MUST handle missing or invalid local media references gracefully by avoiding crashes and preserving the rest of the playlist experience.
+- **FR-020**: The feature MUST define explicit Model, View, ViewModel, and Controller responsibilities for episode loading, playback state, navigation persistence, and refresh behavior.
+- **FR-021**: The feature MUST be implementable with SwiftUI on iOS 17+ only.
+- **FR-022**: The feature MUST remain within frontend-only scope and MUST NOT require backend implementation to complete the requested work.
+- **FR-023**: All variable names MUST use camelCase and end with a type suffix.
+- **FR-024**: Every function introduced by the feature MUST include a documentation block with function name, accepted parameters, purpose, and return value.
 
 ### Key Entities *(include if feature involves data)*
 
 - **Episode**: A single podcast program item presented in the playlist, including a unique identifier, title, host name, duration label, local cover reference, and local audio reference.
-- **Playback Session**: The currently selected listening state, including the active episode, whether playback is currently running, and the information needed to keep the floating playback bar and selection state synchronized across tabs.
+- **Playback Session**: The currently selected listening state, including the active episode, whether playback is currently running or paused, and the information needed to keep the floating playback bar and selection state synchronized across tabs.
 - **Playlist Collection**: The ordered set of valid episode records loaded from local metadata for presentation in the list and for refresh reconciliation.
-- **Tab Destination**: A user-selectable section in the bottom navigation that determines which primary screen is visible while sharing the same playback session.
+- **Tab Destination**: A user-selectable bottom-navigation section limited to `节目`, `发现`, and `我的`, where only `节目` contains the playlist and the other tabs act as placeholder pages in this feature.
 
 ## Success Criteria *(mandatory)*
 
@@ -112,7 +125,9 @@ As a listener, I want the playlist screen to refresh on pull and remain readable
 - The local metadata file in `data/Info` can be parsed into a unique episode collection without requiring network access or user authentication.
 - The prepared sample content set for this feature will include at least 10 valid local episode records with matching image and audio assets.
 - Other bottom tabs may initially contain placeholder content, but they still participate in shared navigation and must not stop active playback.
-- The floating playback bar for this feature only needs to show the current episode title and persistent playback presence; advanced controls beyond basic current-state indication are out of scope.
+- The bottom navigation contains exactly three tabs: `节目`, `发现`, and `我的`; only `节目` contains the podcast list in this feature scope.
+- The floating playback bar includes a play/pause control only; additional controls such as close, seek, or skip remain out of scope.
+- A paused episode remains the active session and keeps the floating playback bar visible until another episode is selected or the session is explicitly cleared.
 - If a local media reference is invalid, the app favors graceful degradation over blocking the entire playlist.
 - The project targets a SwiftUI frontend on iOS 17+ unless the user explicitly amends the constitution.
 - Feature decomposition follows MVVC and maps to Model, View, ViewModel, and Controller groups.

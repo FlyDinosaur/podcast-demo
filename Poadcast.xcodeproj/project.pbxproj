@@ -57,6 +57,7 @@
 		CAC880E82FC584C800C04E17 /* data */ = {
 			isa = PBXGroup;
 			children = (
+				CAC880EC2FC5889D00C04E17 /* Image */,
 				CAC880EB2FC5852600C04E17 /* Audio */,
 				CAC880E92FC584F900C04E17 /* Info */,
 			);
@@ -75,6 +76,13 @@
 			children = (
 			);
 			path = Audio;
+			sourceTree = "<group>";
+		};
+		CAC880EC2FC5889D00C04E17 /* Image */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Image;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

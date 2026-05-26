@@ -8,17 +8,13 @@
 import SwiftUI
 
 struct ContentView: View {
+    let appTabShellViewModel: AppTabShellViewModel
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        AppTabShellView(appTabShellViewModel: appTabShellViewModel)
     }
 }
 
 #Preview {
-    ContentView()
+    ContentView(appTabShellViewModel: AppTabShellViewModel())
 }

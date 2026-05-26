@@ -11,6 +11,11 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		CAC880E82FC584C800C04E17 /* data */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = data;
+			sourceTree = "<group>";
+		};
 		CAC880DA2FC57D1B00C04E17 /* Poadcast */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Poadcast;
@@ -54,37 +59,6 @@
 			path = docs;
 			sourceTree = "<group>";
 		};
-		CAC880E82FC584C800C04E17 /* data */ = {
-			isa = PBXGroup;
-			children = (
-				CAC880EC2FC5889D00C04E17 /* Image */,
-				CAC880EB2FC5852600C04E17 /* Audio */,
-				CAC880E92FC584F900C04E17 /* Info */,
-			);
-			path = data;
-			sourceTree = "<group>";
-		};
-		CAC880E92FC584F900C04E17 /* Info */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Info;
-			sourceTree = "<group>";
-		};
-		CAC880EB2FC5852600C04E17 /* Audio */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Audio;
-			sourceTree = "<group>";
-		};
-		CAC880EC2FC5889D00C04E17 /* Image */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Image;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -101,6 +75,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				CAC880E82FC584C800C04E17 /* data */,
 				CAC880DA2FC57D1B00C04E17 /* Poadcast */,
 			);
 			name = Poadcast;

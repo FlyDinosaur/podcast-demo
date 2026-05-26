@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct PoadcastApp: App {
+    @State private var appTabShellViewModel = AppTabShellViewModel()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(appTabShellViewModel: appTabShellViewModel)
         }
     }
 }

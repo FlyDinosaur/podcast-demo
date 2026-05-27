@@ -42,6 +42,9 @@ final class AppTabShellViewModel {
             playbackController: playbackController,
             playlistDataController: playlistDataController
         )
+        self.playbackController.onPlaybackSessionChangeClosure = { [weak self] in
+            self?.synchronizeSharedPlaybackState()
+        }
         self.podcastPlaylistViewModel.onPlaybackStateChangeClosure = { [weak self] in
             self?.synchronizeSharedPlaybackState()
         }

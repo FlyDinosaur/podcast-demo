@@ -30,8 +30,10 @@ struct AppTabShellView: View {
                 MiniPlayerView(miniPlayerViewModel: appTabShellViewModel.miniPlayerViewModel)
                     .padding(.horizontal, 16)
                     .padding(.bottom, 84)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .animation(.spring(response: 0.32, dampingFraction: 0.86), value: appTabShellViewModel.miniPlayerViewModel.isVisibleBool)
         .onAppear {
             appTabShellViewModel.synchronizeSharedPlaybackState()
         }

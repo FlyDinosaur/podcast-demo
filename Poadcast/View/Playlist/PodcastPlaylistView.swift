@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct PodcastPlaylistView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let podcastPlaylistViewModel: PodcastPlaylistViewModel
 
     var body: some View {
@@ -36,10 +38,7 @@ struct PodcastPlaylistView: View {
         }
         .background(
             LinearGradient(
-                colors: [
-                    Color(red: 0.99, green: 0.95, blue: 0.91),
-                    Color(.systemGroupedBackground)
-                ],
+                colors: backgroundColorArray,
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -61,14 +60,10 @@ struct PodcastPlaylistView: View {
     /// Returns: A composed SwiftUI view for the screen header.
     @ViewBuilder
     private func makeHeaderSection() -> some View {
-            VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("今天想听点什么？")
                 .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundStyle(.primary)
-
-            Text("精选本地节目可离线播放，切换标签页时会保持当前播放状态。")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
 
             if let lastRefreshDate = podcastPlaylistViewModel.playlistViewStateModel.playlistCollectionModel.lastRefreshDate {
                 Text("最近刷新：\(lastRefreshDate.formatted(date: .omitted, time: .shortened))")
@@ -85,6 +80,24 @@ struct PodcastPlaylistView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Function: backgroundColorArray
+    /// Parameters: None.
+    /// Purpose: Provides a dark-mode aware canvas gradient for the playlist screen.
+    /// Returns: An ordered array of `Color` values for the screen background.
+    private var backgroundColorArray: [Color] {
+        if colorScheme == .dark {
+            return [
+                Color(red: 0.11, green: 0.08, blue: 0.09),
+                Color(red: 0.05, green: 0.06, blue: 0.08),
+            ]
+        }
+
+        return [
+            Color(red: 0.99, green: 0.95, blue: 0.91),
+            Color(.systemGroupedBackground),
+        ]
     }
 }
 

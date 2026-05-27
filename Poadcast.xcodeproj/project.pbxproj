@@ -6,19 +6,24 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CAC881A12FC626AB00C04E17 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = CAC881A02FC626AB00C04E17 /* README.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		CAC880D82FC57D1B00C04E17 /* Poadcast.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Poadcast.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CAC881A02FC626AB00C04E17 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		CAC880E82FC584C800C04E17 /* data */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = data;
-			sourceTree = "<group>";
-		};
 		CAC880DA2FC57D1B00C04E17 /* Poadcast */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Poadcast;
+			sourceTree = "<group>";
+		};
+		CAC880E82FC584C800C04E17 /* data */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = data;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -37,8 +42,8 @@
 		CAC880CF2FC57D1B00C04E17 = {
 			isa = PBXGroup;
 			children = (
+				CAC881A02FC626AB00C04E17 /* README.md */,
 				CAC880E82FC584C800C04E17 /* data */,
-				CAC880E72FC57EDA00C04E17 /* docs */,
 				CAC880DA2FC57D1B00C04E17 /* Poadcast */,
 				CAC880D92FC57D1B00C04E17 /* Products */,
 			);
@@ -50,13 +55,6 @@
 				CAC880D82FC57D1B00C04E17 /* Poadcast.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		CAC880E72FC57EDA00C04E17 /* docs */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = docs;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -75,8 +73,8 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				CAC880E82FC584C800C04E17 /* data */,
 				CAC880DA2FC57D1B00C04E17 /* Poadcast */,
+				CAC880E82FC584C800C04E17 /* data */,
 			);
 			name = Poadcast;
 			packageProductDependencies = (
@@ -124,6 +122,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CAC881A12FC626AB00C04E17 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

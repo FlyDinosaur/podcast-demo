@@ -2,6 +2,8 @@ import SwiftUI
 import UIKit
 
 struct EpisodeRowView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let rowStateModel: PlaylistRowState
     let onTapAction: () -> Void
 
@@ -48,10 +50,13 @@ struct EpisodeRowView: View {
                     .foregroundStyle(rowStateModel.isAudioAvailableBool ? .primary : .secondary)
             }
             .padding(16)
-            .background(makeBackgroundStyle())
+            .background(
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .fill(makeBackgroundStyle())
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .strokeBorder(rowStateModel.isActiveBool ? Color.orange.opacity(0.55) : Color.primary.opacity(0.06), lineWidth: 1)
+                    .strokeBorder(makeBorderColor(), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -97,17 +102,36 @@ struct EpisodeRowView: View {
         if rowStateModel.isActiveBool {
             return AnyShapeStyle(
                 LinearGradient(
-                colors: [
-                    Color.orange.opacity(0.18),
-                    Color.red.opacity(0.08)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+                    colors: colorScheme == .dark ? [
+                        Color.orange.opacity(0.24),
+                        Color.red.opacity(0.18),
+                    ] : [
+                        Color.orange.opacity(0.18),
+                        Color.red.opacity(0.08),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
             )
         }
 
-        return AnyShapeStyle(Color(.secondarySystemGroupedBackground))
+        return AnyShapeStyle(
+            colorScheme == .dark
+                ? Color(red: 0.12, green: 0.13, blue: 0.16)
+                : Color(.secondarySystemGroupedBackground)
+        )
+    }
+
+    /// Function: makeBorderColor()
+    /// Parameters: None.
+    /// Purpose: Selects a border color that stays visible without creating a bright halo in dark mode.
+    /// Returns: A `Color` value for the row outline.
+    private func makeBorderColor() -> Color {
+        if rowStateModel.isActiveBool {
+            return colorScheme == .dark ? Color.orange.opacity(0.42) : Color.orange.opacity(0.55)
+        }
+
+        return colorScheme == .dark ? Color.white.opacity(0.08) : Color.primary.opacity(0.06)
     }
 
     /// Function: makeCoverUIImage(for:)
@@ -116,14 +140,7 @@ struct EpisodeRowView: View {
     /// Purpose: Loads a local cover image from the application bundle for row rendering.
     /// Returns: A `UIImage` when the asset is found; otherwise `nil`.
     private func makeCoverUIImage(for assetNameString: String) -> UIImage? {
-        let assetPathString = assetNameString as NSString
-        let fileNameString = assetPathString.deletingPathExtension
-        let fileExtensionString = assetPathString.pathExtension
-
-        guard let imageURLValue = Bundle.main.url(
-            forResource: fileNameString,
-            withExtension: fileExtensionString.isEmpty ? nil : fileExtensionString
-        ) else {
+        guard let imageURLValue = PlaylistDataController.makeResolvedBundleURL(in: .main, for: assetNameString) else {
             return nil
         }
 

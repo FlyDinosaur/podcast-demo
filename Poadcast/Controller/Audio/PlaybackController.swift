@@ -7,8 +7,15 @@ import Observation
 final class PlaybackController {
     private let playlistDataController: PlaylistDataController
     private let playerObject = AVPlayer()
+    private var playbackEndedObserverObject: NSObjectProtocol?
 
-    private(set) var playbackSessionModel = PlaybackSession()
+    var onPlaybackSessionChangeClosure: (() -> Void)?
+
+    private(set) var playbackSessionModel = PlaybackSession() {
+        didSet {
+            onPlaybackSessionChangeClosure?()
+        }
+    }
 
     /// Function: init(playlistDataController:)
     /// Parameters:
@@ -36,6 +43,7 @@ final class PlaybackController {
         }
 
         let playerItemObject = AVPlayerItem(url: audioURLValue)
+        observePlaybackDidEnd(for: playerItemObject)
         playerObject.replaceCurrentItem(with: playerItemObject)
         playerObject.play()
         playbackSessionModel = PlaybackSession(
@@ -60,6 +68,10 @@ final class PlaybackController {
             playerObject.pause()
             playbackSessionModel.isPlayingBool = false
         } else {
+            if isCurrentItemFinishedBool {
+                playerObject.seek(to: .zero)
+            }
+
             playerObject.play()
             playbackSessionModel.isPlayingBool = true
         }
@@ -98,9 +110,68 @@ final class PlaybackController {
     /// Purpose: Stops the shared player and clears the active playback state.
     /// Returns: None.
     func stopPlayback() {
+        removePlaybackEndedObserver()
         playerObject.pause()
         playerObject.replaceCurrentItem(with: nil)
         playbackSessionModel.activeEpisodeModel = nil
         playbackSessionModel.isPlayingBool = false
+    }
+
+    /// Function: observePlaybackDidEnd(for:)
+    /// Parameters:
+    ///   - playerItemObject: The player item that should trigger end-of-playback reconciliation.
+    /// Purpose: Watches the active AVPlayer item and updates shared state when playback naturally reaches the end.
+    /// Returns: None.
+    private func observePlaybackDidEnd(for playerItemObject: AVPlayerItem) {
+        removePlaybackEndedObserver()
+        playbackEndedObserverObject = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: playerItemObject,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handlePlaybackDidEnd()
+        }
+    }
+
+    /// Function: removePlaybackEndedObserver()
+    /// Parameters: None.
+    /// Purpose: Removes any observer attached to the previously active AVPlayer item.
+    /// Returns: None.
+    private func removePlaybackEndedObserver() {
+        guard let playbackEndedObserverObject else {
+            return
+        }
+
+        NotificationCenter.default.removeObserver(playbackEndedObserverObject)
+        self.playbackEndedObserverObject = nil
+    }
+
+    /// Function: handlePlaybackDidEnd()
+    /// Parameters: None.
+    /// Purpose: Converts a natural playback finish into a paused, ready-to-replay session and rewinds the player.
+    /// Returns: None.
+    private func handlePlaybackDidEnd() {
+        playerObject.seek(to: .zero)
+        playbackSessionModel.isPlayingBool = false
+        playbackSessionModel.playbackErrorString = nil
+    }
+
+    /// Function: isCurrentItemFinishedBool
+    /// Parameters: None.
+    /// Purpose: Indicates whether the current AVPlayer item is already at its end and should be replayed from the start.
+    /// Returns: `true` when the current item has reached the end; otherwise `false`.
+    private var isCurrentItemFinishedBool: Bool {
+        guard let currentItemObject = playerObject.currentItem else {
+            return false
+        }
+
+        let durationSecondsValue = currentItemObject.duration.seconds
+        let currentTimeSecondsValue = currentItemObject.currentTime().seconds
+
+        guard durationSecondsValue.isFinite, currentTimeSecondsValue.isFinite, durationSecondsValue > 0 else {
+            return false
+        }
+
+        return currentTimeSecondsValue >= durationSecondsValue - 0.05
     }
 }

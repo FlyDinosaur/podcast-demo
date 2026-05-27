@@ -13,9 +13,10 @@ final class MiniPlayerViewModel {
     private(set) var isPlayingBool: Bool
     private(set) var playbackErrorString: String?
     private(set) var isCoverAvailableBool: Bool
+    private(set) var isDismissedByUserBool: Bool
 
     var isVisibleBool: Bool {
-        activeEpisodeModel != nil
+        activeEpisodeModel != nil && !isDismissedByUserBool
     }
 
     /// Function: init(playbackController:playlistDataController:)
@@ -34,6 +35,7 @@ final class MiniPlayerViewModel {
         self.isPlayingBool = false
         self.playbackErrorString = nil
         self.isCoverAvailableBool = false
+        self.isDismissedByUserBool = false
         syncFromPlaybackController()
     }
 
@@ -42,6 +44,7 @@ final class MiniPlayerViewModel {
     /// Purpose: Copies the latest shared playback session into mini-player presentation state.
     /// Returns: None.
     func syncFromPlaybackController() {
+        let previousEpisodeID = activeEpisodeModel?.idUUID
         let playbackSessionModel = playbackController.playbackSessionModel
         activeEpisodeModel = playbackSessionModel.activeEpisodeModel
         isPlayingBool = playbackSessionModel.isPlayingBool
@@ -49,6 +52,13 @@ final class MiniPlayerViewModel {
         isCoverAvailableBool = playbackSessionModel.activeEpisodeModel.map {
             playlistDataController.isCoverAvailable(for: $0)
         } ?? false
+
+        let currentEpisodeID = activeEpisodeModel?.idUUID
+        if currentEpisodeID == nil {
+            isDismissedByUserBool = false
+        } else if currentEpisodeID != previousEpisodeID {
+            isDismissedByUserBool = false
+        }
     }
 
     /// Function: togglePlayback()
@@ -59,5 +69,17 @@ final class MiniPlayerViewModel {
         _ = playbackController.toggleCurrentPlayback()
         syncFromPlaybackController()
         onPlaybackStateChangeClosure?()
+    }
+
+    /// Function: dismissMiniPlayer()
+    /// Parameters: None.
+    /// Purpose: Hides the mini-player until playback switches to another episode or the current session ends.
+    /// Returns: None.
+    func dismissMiniPlayer() {
+        guard activeEpisodeModel != nil else {
+            return
+        }
+
+        isDismissedByUserBool = true
     }
 }

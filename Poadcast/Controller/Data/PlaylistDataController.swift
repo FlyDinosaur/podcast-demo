@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 enum PlaylistDataControllerError: LocalizedError {
     case missingMetadataFile
@@ -59,7 +60,7 @@ struct PlaylistDataController {
     /// Purpose: Locates a bundled cover image URL for the provided episode if it exists.
     /// Returns: A bundled image `URL`, or `nil` when the asset cannot be found.
     func makeImageURL(for episodeModel: Episode) -> URL? {
-        makeBundleURL(for: episodeModel.coverAssetNameString)
+        Self.makeResolvedBundleURL(in: bundleValue, for: episodeModel.coverAssetNameString)
     }
 
     /// Function: makeAudioURL(for:)
@@ -68,7 +69,20 @@ struct PlaylistDataController {
     /// Purpose: Locates a bundled audio file URL for the provided episode if it exists.
     /// Returns: A bundled audio `URL`, or `nil` when the asset cannot be found.
     func makeAudioURL(for episodeModel: Episode) -> URL? {
-        makeBundleURL(for: episodeModel.audioAssetNameString)
+        Self.makeResolvedBundleURL(in: bundleValue, for: episodeModel.audioAssetNameString)
+    }
+
+    /// Function: makeCoverUIImage(for:)
+    /// Parameters:
+    ///   - episodeModel: The episode whose cover image should be loaded.
+    /// Purpose: Loads a bundled cover image for SwiftUI views that need a `UIImage`.
+    /// Returns: A `UIImage` when the bundled cover image exists; otherwise `nil`.
+    func makeCoverUIImage(for episodeModel: Episode) -> UIImage? {
+        guard let imageURLValue = makeImageURL(for: episodeModel) else {
+            return nil
+        }
+
+        return UIImage(contentsOfFile: imageURLValue.path)
     }
 
     /// Function: isCoverAvailable(for:)
@@ -100,8 +114,8 @@ struct PlaylistDataController {
             titleString: payloadModel.titleString,
             hostString: payloadModel.hostString,
             durationString: payloadModel.durationString,
-            coverAssetNameString: makeNormalizedAssetNameString(from: payloadModel.coverImageURLString),
-            audioAssetNameString: makeNormalizedAssetNameString(from: payloadModel.audioURLString)
+            coverAssetNameString: Self.makeNormalizedAssetNameString(from: payloadModel.coverImageURLString),
+            audioAssetNameString: Self.makeNormalizedAssetNameString(from: payloadModel.audioURLString)
         )
     }
 
@@ -110,10 +124,11 @@ struct PlaylistDataController {
     ///   - assetNameString: The stored asset path or file name from the playlist metadata.
     /// Purpose: Resolves a file name against the application bundle using either direct path or base name lookup.
     /// Returns: A bundled file `URL`, or `nil` when lookup fails.
-    private func makeBundleURL(for assetNameString: String) -> URL? {
+    static func makeResolvedBundleURL(in bundleValue: Bundle, for assetNameString: String) -> URL? {
         let normalizedAssetNameString = makeNormalizedAssetNameString(from: assetNameString)
         let assetPathString = normalizedAssetNameString as NSString
         let fileNameString = assetPathString.deletingPathExtension
+        let fileNameComponentString = (fileNameString as NSString).lastPathComponent
         let fileExtensionString = assetPathString.pathExtension
         let subdirectoryArray = normalizedAssetNameString
             .split(separator: "/")
@@ -122,7 +137,7 @@ struct PlaylistDataController {
         let subdirectoryString = subdirectoryArray.isEmpty ? nil : subdirectoryArray.joined(separator: "/")
 
         if let directURLValue = bundleValue.url(
-            forResource: fileNameString,
+            forResource: fileNameComponentString,
             withExtension: fileExtensionString.isEmpty ? nil : fileExtensionString,
             subdirectory: subdirectoryString
         ) {
@@ -130,7 +145,7 @@ struct PlaylistDataController {
         }
 
         return bundleValue.url(
-            forResource: fileNameString,
+            forResource: fileNameComponentString,
             withExtension: fileExtensionString.isEmpty ? nil : fileExtensionString
         )
     }
@@ -140,7 +155,7 @@ struct PlaylistDataController {
     ///   - rawPathString: The raw asset path value decoded from the playlist metadata.
     /// Purpose: Converts bundle-relative metadata paths into clean bundle lookup names.
     /// Returns: A normalized asset path string.
-    private func makeNormalizedAssetNameString(from rawPathString: String) -> String {
+    private static func makeNormalizedAssetNameString(from rawPathString: String) -> String {
         var normalizedPathString = rawPathString.trimmingCharacters(in: .whitespacesAndNewlines)
 
         while normalizedPathString.hasPrefix("/") {

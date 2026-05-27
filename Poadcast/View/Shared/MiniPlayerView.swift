@@ -2,6 +2,9 @@ import SwiftUI
 import UIKit
 
 struct MiniPlayerView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var dragOffsetY: CGFloat = 0
+
     let miniPlayerViewModel: MiniPlayerViewModel
 
     var body: some View {
@@ -39,12 +42,19 @@ struct MiniPlayerView: View {
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(.ultraThinMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .fill(glassTintColor.opacity(colorScheme == .dark ? 0.22 : 0.34))
+                    )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                    .strokeBorder(miniPlayerBorderColor, lineWidth: 1)
             )
-            .shadow(color: Color.black.opacity(0.08), radius: 16, x: 0, y: 10)
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.28 : 0.08), radius: 16, x: 0, y: 10)
+            .offset(y: max(0, dragOffsetY))
+            .opacity(makeMiniPlayerOpacity())
+            .gesture(makeDismissGesture())
         }
     }
 
@@ -89,18 +99,60 @@ struct MiniPlayerView: View {
     /// Purpose: Loads a local cover image from the application bundle for display.
     /// Returns: A `UIImage` when the asset is found; otherwise `nil`.
     private func makeCoverUIImage(for assetNameString: String) -> UIImage? {
-        let assetPathString = assetNameString as NSString
-        let fileNameString = assetPathString.deletingPathExtension
-        let fileExtensionString = assetPathString.pathExtension
-
-        guard let imageURLValue = Bundle.main.url(
-            forResource: fileNameString,
-            withExtension: fileExtensionString.isEmpty ? nil : fileExtensionString
-        ) else {
+        guard let imageURLValue = PlaylistDataController.makeResolvedBundleURL(in: .main, for: assetNameString) else {
             return nil
         }
 
         return UIImage(contentsOfFile: imageURLValue.path)
+    }
+
+    /// Function: miniPlayerBorderColor
+    /// Parameters: None.
+    /// Purpose: Provides a subtle outline that avoids bright white edges around the rounded mini-player.
+    /// Returns: A `Color` value for the mini-player border.
+    private var miniPlayerBorderColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.08) : Color.primary.opacity(0.08)
+    }
+
+    /// Function: glassTintColor
+    /// Parameters: None.
+    /// Purpose: Adds a soft color cast above the blur so the mini-player keeps a controlled translucent tone.
+    /// Returns: A `Color` value for the glass tint overlay.
+    private var glassTintColor: Color {
+        colorScheme == .dark
+            ? Color(red: 0.16, green: 0.18, blue: 0.24)
+            : Color.white
+    }
+
+    /// Function: makeDismissGesture()
+    /// Parameters: None.
+    /// Purpose: Enables the listener to drag the floating mini-player downward to hide it.
+    /// Returns: A configured `some Gesture` value.
+    private func makeDismissGesture() -> some Gesture {
+        DragGesture(minimumDistance: 8, coordinateSpace: .local)
+            .onChanged { value in
+                dragOffsetY = max(0, value.translation.height)
+            }
+            .onEnded { value in
+                let shouldDismissBool = value.translation.height > 56 || value.predictedEndTranslation.height > 96
+
+                withAnimation(.spring(response: 0.28, dampingFraction: 0.84)) {
+                    dragOffsetY = 0
+                }
+
+                if shouldDismissBool {
+                    miniPlayerViewModel.dismissMiniPlayer()
+                }
+            }
+    }
+
+    /// Function: makeMiniPlayerOpacity()
+    /// Parameters: None.
+    /// Purpose: Softens the mini-player while it is being dragged downward to dismiss.
+    /// Returns: A `Double` opacity value for the floating player.
+    private func makeMiniPlayerOpacity() -> Double {
+        let progressValue = min(max(dragOffsetY / 120, 0), 1)
+        return 1 - (progressValue * 0.24)
     }
 }
 
